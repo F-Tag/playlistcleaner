@@ -6,7 +6,7 @@ from sys import argv
 from unicodedata import normalize
 
 import pandas as pd
-from mutagen import File
+import taglib
 from numpy import roll
 from tqdm import tqdm
 
@@ -16,9 +16,10 @@ def get_info(path, m3u8_path):
     if not path.is_absolute():
         path = (m3u8_path.parent / path).resolve(strict=True)
 
-    audio = File(path)
-    info_dict = {k: v for k, v in audio.tags}
-    info_dict["has_jacket"] = len(audio.pictures) > 0
+    with taglib.File(path, save_on_exit=False) as song:
+        tags = song.tags
+
+    info_dict = {k: v[0] for k, v in tags.items()}
     info_dict["path"] = str(relpath(path, m3u8_path.parent))
     return info_dict
 
@@ -26,7 +27,7 @@ def get_info(path, m3u8_path):
 def normalizer(input_str):
     input_str = normalize("NFKC", input_str)
     input_str = input_str.lower()
-    input_str = re.sub("[\/\\^$*+?.|'\"・,、。]", " ", input_str)
+    input_str = re.sub("[\/\\^$*+?.|'\"・,、。’]", " ", input_str)
     input_str = re.sub(" +", " ", input_str)
     input_str = re.sub(" $", "", input_str)
     input_str = re.sub("^ ", "", input_str)
@@ -43,6 +44,7 @@ if __name__ == "__main__":
 
     lst = [get_info(path, playlist) for path in tqdm(files, desc="read music metadata")]
     df = pd.DataFrame(lst)
+    df = df[~df[["ARTIST", "ALBUM"]].isna().all(axis=1)]
     df["ARTIST"] = df["ARTIST"].map(normalizer)
     df["TITLE"] = df["TITLE"].map(normalizer)
     df["ALBUM"] = df["ALBUM"].map(normalizer)
@@ -86,14 +88,14 @@ if __name__ == "__main__":
 
     # instを除外
     lst = []
-    for (title_group, _), df_title in df[~df["flag"]].groupby(
-        ["title_group", "ARTIST"]
-    ):
+    for title_group, df_title in df[~df["flag"]].groupby("title_group"):
         if len(df_title) < 2:
             continue
 
         # inst検出キーワード
-        regex = "instrumental|without|backing|karaoke|inst|カラオケ|off vocal|vocalless"
+        regex = (
+            "instrumental|without|backing|karaoke|inst|カラオケ|off vocal|vocalless|ヴォーカルレス"
+        )
 
         # TITLEがキーワードに一致する場合を除外リストに追加
         lst_sub = df_title.loc[
@@ -115,7 +117,7 @@ if __name__ == "__main__":
             continue
 
         # 検出キーワード
-        regex = "live|tv|short|single|remix|mix|wo|edit|ver|style|another|version|recording|ヴァージョン|reprise|バージョン"
+        regex = "live|tv|short|single|remix|mix|wo|edit|ver|style|another|version|recording|ヴァージョン|reprise|バージョン|mode"
 
         # TITLEがキーワードに一致する場合を除外リストに追加
         lst_sub = df_title.loc[
@@ -129,7 +131,7 @@ if __name__ == "__main__":
     df.loc[lst, "flag"] = True
 
     # is_remaster 列を追加
-    regex = "remaster"
+    regex = "remaster|aufwachen"
     df["is_remaster"] = df["TITLE"].str.findall(regex).astype(bool).astype(int)
 
     # 優先度順に並び替える
