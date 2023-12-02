@@ -1,19 +1,23 @@
-from mutagen.flac import FLAC
-from mutagen import File
-from sys import argv
-import pandas as pd
-from pathlib import Path
-from os.path import relpath
-from unicodedata import normalize
 import re
+from os.path import relpath
+from pathlib import Path
+from sys import argv
+from unicodedata import normalize
 
-import numpy as np
+import pandas as pd
+from mutagen import File
+from tqdm import tqdm
+
+from numpy import roll
+from shutil import move
 
 
 def get_info(path, m3u8_path):
-    path = Path(path)
-    audio = File(path)
+    path, m3u8_path = Path(path), Path(m3u8_path)
+    if not path.is_absolute():
+        path = (m3u8_path.parent / path).resolve(strict=True)
 
+    audio = File(path)
     info_dict = {k: v for k, v in audio.tags}
     info_dict["has_jacket"] = len(audio.pictures) > 0
     info_dict["path"] = str(relpath(path, m3u8_path.parent))
@@ -23,7 +27,7 @@ def get_info(path, m3u8_path):
 def normalizer(input_str):
     input_str = normalize("NFKC", input_str)
     input_str = input_str.lower()
-    input_str = re.sub("[-\/\\^$*+?.|'~\"・]", " ", input_str)
+    input_str = re.sub("[\/\\^$*+?.|'\"・,、。]", " ", input_str)
     input_str = re.sub(" +", " ", input_str)
     input_str = re.sub(" $", "", input_str)
     input_str = re.sub("^ ", "", input_str)
@@ -36,85 +40,140 @@ if __name__ == "__main__":
     files = pd.read_csv(playlist, sep="\t", header=None)
     files = files[0]
     files = files[~files.str.match("^#")]
-    files = files.values.tolist()  # [:30]
+    files = files.values.tolist()
 
-    lst = [get_info(path, playlist) for path in files]
+    lst = [get_info(path, playlist) for path in tqdm(files, desc="read music metadata")]
     df = pd.DataFrame(lst)
     df["ARTIST"] = df["ARTIST"].map(normalizer)
     df["TITLE"] = df["TITLE"].map(normalizer)
     df["ALBUM"] = df["ALBUM"].map(normalizer)
     df.loc[df["DATE"].isna(), "DATE"] = "0000-00-00"
-    df = df.sort_values(["TITLE", "DATE"], ascending=[True, False])
 
-    # trans_title, ARTISTが同じ場合は最新のもののみ残してDrop
-    df = df.drop_duplicates(("TITLE", "ARTIST"))
+    # COME ALONG, live盤フラグ列を追加する
+    regex = "come along|live"
+    df["is_live"] = df["ALBUM"].str.findall(regex).astype(bool).astype(int)
 
     # グループ分け用にタイトルを変形
     df["trans_title"] = df["TITLE"]
     df["trans_title"] = df["trans_title"].str.replace("\(.*\)", "", regex=True)
     df["trans_title"] = df["trans_title"].str.replace("\[.*\]", "", regex=True)
     df["trans_title"] = df["trans_title"].str.replace("{.*}", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace("\-.*\-", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace("\~.*\~", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace("-", "")
+    df["trans_title"] = df["trans_title"].str.replace("~", "")
     df["trans_title"] = df["trans_title"].str.replace(" ", "")
+    # input_str = [s for s in input_str.split("~") if s][0]
 
     # 変形タイトルでグループ化
-    df["partial_title"] = None
-    while df["partial_title"].isna().any():
-        title = df[df["partial_title"].isna()].iloc[0]["trans_title"]
-        regex = "^" + title
-        df.loc[df["trans_title"].str.match(regex), "partial_title"] = title
+    df = df.sort_values(["trans_title", "DATE"], ascending=[True, False])
+    df["group_pattern"] = roll(df["trans_title"].values, 1)
+    df["title_group"] = df.apply(
+        lambda x: int(not bool(re.findall("^" + x["group_pattern"], x["trans_title"]))),
+        axis=1,
+    ).cumsum()
 
-    # アーティスト、タイトルグループごとに1曲選択
-    lst = []
-    for (partial_title, _), df_title in df.groupby(["partial_title", "ARTIST"]):
-        df_title = df_title.sort_values(["TITLE", "DATE"], ascending=[True, False])
-        df_title = df_title.drop_duplicates("TITLE")
-        df_title["score"] = np.arange(len(df_title))
-
-        # partial_titleにinstらしき文字が入っていた場合他の候補を確認
-        regex = (
-            "instrumental|without|backing track|karaoke|inst|カラオケ|off vocal|vocalless"
-        )
-        if re.findall(regex, partial_title):
-            pattern = re.sub(regex, "", partial_title)
-            pattern = re.sub(" $", "", pattern)
-            pattern = re.sub("^ ", "", pattern)
-            pattern = "^" + pattern
-
-            if (
-                df.loc[df["partial_title"] != partial_title, "TITLE"]
-                .str.findall(pattern)
-                .any()
-            ):
-                continue
-
-        # インスト版の優先度を下げる
-        df_title.loc[df_title["TITLE"].str.findall(regex).astype(bool), "score"] += 100
-
-        # short 版の優先度を下げる
-        regex = (
-            "live|tv|short|single|remix|mix|wo|edit|ver|style|another|version|recording"
-        )
-        df_title.loc[df_title["TITLE"].str.findall(regex).astype(bool), "score"] += 1
-
-        # COME ALONG, live盤 の優先度を下げる
-        regex = "come along|live"
-        df_title.loc[df_title["ALBUM"].str.findall(regex).astype(bool), "score"] += 10
-
-        # remaster 以外の優先度を下げる
-        regex = "remaster"
-        df_title.loc[df_title["TITLE"].str.findall(regex).astype(bool), "score"] -= 1
-
-        # score 順に並び替えて、最初のindexを取得
-        df_title = df_title.sort_values("score")
-
-        # score最小のindexを取得
-        lst.append(df_title.index.values.tolist()[0])
-
-    # debug
+    # 除外管理フラグを追加
     df["flag"] = False
-    df.loc[lst, "flag"] = True
-    df.to_csv("test.csv")
 
-    df.loc[df["flag"], "path"].to_csv(
-        playlist.parent / "test.m3u8", index=False, header=False
+    # 優先度順に並び替える
+    df = df.sort_values(["TITLE", "is_live", "DATE"], ascending=[True, True, False])
+
+    # TITLE, ARTISTが同じ場合は最初のものだけ残してDrop対象へ
+    df.loc[df.duplicated(("TITLE", "ARTIST")), "flag"] = True
+
+    # 優先度順に並び替える
+    df = df.sort_values(["title_group", "DATE"], ascending=[True, False])
+
+    # instを除外
+    lst = []
+    for (title_group, _), df_title in df[~df["flag"]].groupby(
+        ["title_group", "ARTIST"]
+    ):
+        if len(df_title) < 2:
+            continue
+
+        # inst検出キーワード
+        regex = "instrumental|without|backing|karaoke|inst|カラオケ|off vocal|vocalless"
+
+        # TITLEがキーワードに一致する場合を除外リストに追加
+        lst_sub = df_title.loc[
+            df_title["TITLE"].str.findall(regex).astype(bool)
+        ].index.values.tolist()
+        if len(lst_sub) == len(df_title):
+            lst_sub = []
+        lst += lst_sub
+
+    # 除外リストを適用
+    df.loc[lst, "flag"] = True
+
+    # アレンジ、live盤を除外
+    lst = []
+    for (title_group, _), df_title in df[~df["flag"]].groupby(
+        ["title_group", "ARTIST"]
+    ):
+        if len(df_title) < 2:
+            continue
+
+        # 検出キーワード
+        regex = "live|tv|short|single|remix|mix|wo|edit|ver|style|another|version|recording|ヴァージョン|reprise|バージョン"
+
+        # TITLEがキーワードに一致する場合を除外リストに追加
+        lst_sub = df_title.loc[
+            df_title["TITLE"].str.findall(regex).astype(bool)
+        ].index.values.tolist()
+        if len(lst_sub) == len(df_title):
+            lst_sub = lst_sub[1:]
+        lst += lst_sub
+
+    # 除外リストを適用
+    df.loc[lst, "flag"] = True
+
+    # is_remaster 列を追加
+    regex = "remaster"
+    df["is_remaster"] = df["TITLE"].str.findall(regex).astype(bool).astype(int)
+
+    # 優先度順に並び替える
+    df = df.sort_values(
+        ["trans_title", "flag", "is_remaster", "is_live", "DATE"],
+        ascending=[True, True, False, True, False],
     )
+
+    # 同じtrans_titleのものをDrop
+    df.loc[df.duplicated(("trans_title", "ARTIST")), "flag"] = True
+
+    # 優先度順に並び替える
+    df = df.sort_values(
+        ["trans_title", "flag", "is_remaster", "is_live", "DATE"],
+        ascending=[True, True, False, True, False],
+    )
+
+    # 同じtitle_groupの内live版のものが残っていればDROP
+    lst = []
+    for (title_group, _), df_title in df[~df["flag"]].groupby(
+        ["title_group", "ARTIST"]
+    ):
+        if len(df_title) < 2:
+            continue
+
+        # TITLEがキーワードに一致する場合を除外リストに追加
+        lst_sub = df_title[df_title["is_live"] == 1].index.values.tolist()
+        if len(lst_sub) == len(df_title):
+            lst_sub = lst_sub[1:]
+        lst += lst_sub
+
+    # 除外リストを適用
+    df.loc[lst, "flag"] = True
+
+    # tsvファイルを保存
+    output = Path("output")
+    output.mkdir(exist_ok=True, parents=True)
+    df.sort_values(["title_group", "flag"]).to_csv(
+        output / f"{playlist.stem}.tsv", sep="\t"
+    )
+
+    # 古いplaylistをリネーム
+    move(playlist, playlist.parent / f"OLD_{playlist.name}")
+
+    # playlistを保存
+    df.sort_index().loc[~df["flag"], "path"].to_csv(playlist, index=False, header=False)
