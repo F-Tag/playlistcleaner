@@ -29,17 +29,6 @@ plugins = ["setuptools"]
 requirements-deprecated-finder = ["pip-api", "pipreqs"]
 
 [[package]]
-name = "mutagen"
-version = "1.47.0"
-description = "read and write audio tags for many formats"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "mutagen-1.47.0-py3-none-any.whl", hash = "sha256:edd96f50c5907a9539d8e5bba7245f62c9f520aef333d13392a79a4f70aca719"},
-    {file = "mutagen-1.47.0.tar.gz", hash = "sha256:719fadef0a978c31b4cf3c956261b3c58b6948b32023078a2117b1de09f0fc99"},
-]
-
-[[package]]
 name = "numpy"
 version = "1.26.2"
 description = "Fundamental package for array computing in Python"
@@ -152,6 +141,53 @@ test = ["hypothesis (>=6.46.1)", "pytest (>=7.3.2)", "pytest-xdist (>=2.2.0)"]
 xml = ["lxml (>=4.8.0)"]
 
 [[package]]
+name = "pytaglib"
+version = "2.1.0"
+description = "cross-platform, Python audio metadata (\"tagging\") library based on TagLib"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pytaglib-2.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:599a15ede4b80c8a35549993f44eddf05579d0915c51d2b98a6ff5e3c1294767"},
+    {file = "pytaglib-2.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:33f54db28a6f78ecd502680c3a34366ce7fbda76736a048a270c5b92760a516f"},
+    {file = "pytaglib-2.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0d96563998fb88ca60f9b897d819323014b27f431d925bff13085912e63ecefa"},
+    {file = "pytaglib-2.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:7260f346f519600662e7324f3a02fdc8a7eeb8a85b938a8136fcfd79918f684b"},
+    {file = "pytaglib-2.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:d02fe61117468b6742b91b3a64718a6e12ce8aab5084ab2d6505696a72303a56"},
+    {file = "pytaglib-2.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:bb386541200fc74c07100e1555720311aa8fe8aa953a9d6a2884e77290a3e685"},
+    {file = "pytaglib-2.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:935ce0c1f0f36365eeb931418238ce3c98f89a84f0fec998e6d980ca738d3e39"},
+    {file = "pytaglib-2.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:376130120b56809262d8524fc15340cae61898c7f3c1f422c053d83c694443b1"},
+    {file = "pytaglib-2.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:95e31a70acd9b29905d11b78cf6f8468f7206982710d9c289cd11282b6a260e7"},
+    {file = "pytaglib-2.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:b824a51097361532eafbd29fe8c74eb7b7db6133108e45ec6ca026c2e5a6ca4a"},
+    {file = "pytaglib-2.1.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:2e79511e3d6efaab20e82457ac0bd433821931fcc6139d257a1d5f997054c9bf"},
+    {file = "pytaglib-2.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a8216e5b0d633e88176a043d6449e31d87a5addc890d4618db37b3627c9ba453"},
+    {file = "pytaglib-2.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:19b5ed29bfa0df5c6e39c0466986ef12adea2ba551dac1a24bc9f9100dd87c4e"},
+    {file = "pytaglib-2.1.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:793c9f64050da83295c60b06a93b06e86f9e4f3ed39f1f9e902c0b225d568d40"},
+    {file = "pytaglib-2.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:d6bb8b21130bcf56e9084d01fc64e19a022b86117f0a12f520dfdeddcde24fe9"},
+    {file = "pytaglib-2.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:f77774e2400508a9485acb13e8b69e251dd5f2f4e2df666a5dd6f3b288ef8f24"},
+    {file = "pytaglib-2.1.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:388cc408ce47b9c76e22b56fa540078b7c3e88053795c42608818dc2d9c494dd"},
+    {file = "pytaglib-2.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d22860329f670c70ff1274ccfdf1b616195f6b1592a0fcc1d41d319365b1aa81"},
+    {file = "pytaglib-2.1.0-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:1c26fcb5a1fc9847ef7d0363929dc00e118f12348cd80b85e9c83b231cc10d31"},
+    {file = "pytaglib-2.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:b79bc64c4b7d53b0adb5db46d24ce837ba4d0429b6eb44707cf2c92d201d66ce"},
+    {file = "pytaglib-2.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:23c5ebacdb98c82398281258499c364d930cf94c4ffc9fd7f1f3b6974ad3336a"},
+    {file = "pytaglib-2.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:7f6657331bbbcee01444a7099e2c53310d91fcb58bcae2c002a5adf517585e82"},
+    {file = "pytaglib-2.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:90bb174b52d88d226acf017ad37479b2351225736051888cd67adafe5f15a7a5"},
+    {file = "pytaglib-2.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:4bce43086429c61604edecd6fea5baad9080b994523a8409717d126fbae0d972"},
+    {file = "pytaglib-2.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:7a8ae4254565ec5eeaa9120f256650dd9f6ec72852513eb86fdd5716dbd75bc5"},
+    {file = "pytaglib-2.1.0-pp310-pypy310_pp73-macosx_10_9_x86_64.whl", hash = "sha256:147981520eca554e6f0df21a937aac4ea7020ec2cfb495393018fd34d95db654"},
+    {file = "pytaglib-2.1.0-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9a16a84f79398766269ceb8cb4c2eebec49135e3b1088e727014cfd3650a9586"},
+    {file = "pytaglib-2.1.0-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:1024de35533ef09234daf1b5781ae604362e20c6b273a5bbdb10213eb2b1bff8"},
+    {file = "pytaglib-2.1.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:81868d49d1a575c802214b44e4c5d4617667617241842413c278800ccbb2527f"},
+    {file = "pytaglib-2.1.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7d497f3e5b5c664ab79efeb38a01b36f827aafe61e5ce5b15df385d1ce771c90"},
+    {file = "pytaglib-2.1.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:63da383a035e761a57f0f19f6bb2af8e12949f3ac82f98faa40a83dd4611cc6e"},
+    {file = "pytaglib-2.1.0-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:f42ac6eb74bb147bfccf5bf379b727fb6e1b982ca42bd8d50b74f7c30a01fead"},
+    {file = "pytaglib-2.1.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:25dd234240233effb0bdc546cf4431131f2a37995162dca0f5906cba4ca6920d"},
+    {file = "pytaglib-2.1.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:d2037fe2e94ebee7623b181254c7fa410c02fe18eeb35595716140f0b924464b"},
+    {file = "pytaglib-2.1.0.tar.gz", hash = "sha256:6b0e1a2d0602a9c457254c2e0fe72063ddb205d2a7fd283bf912e4e7bcca48af"},
+]
+
+[package.extras]
+tests = ["pytest (>=7.4.3,<7.5.0)"]
+
+[[package]]
 name = "python-dateutil"
 version = "2.8.2"
 description = "Extensions to the standard Python datetime module"
@@ -221,4 +257,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "c26cf9dbcbe661c76cf1def11b9f65cef9596aa98cc0b6b50b7eb0511aeb572d"
+content-hash = "9c2cb679153dc5c7ae1202f6f812de8237ff2558c1314ee1062ed1f0bf2d8392"
