@@ -1,15 +1,14 @@
 import re
 from os.path import relpath
 from pathlib import Path
+from shutil import move
 from sys import argv
 from unicodedata import normalize
 
 import pandas as pd
 from mutagen import File
-from tqdm import tqdm
-
 from numpy import roll
-from shutil import move
+from tqdm import tqdm
 
 
 def get_info(path, m3u8_path):
