@@ -216,4 +216,4 @@ if __name__ == "__main__":
     move(playlist, playlist.parent / f"OLD_{playlist.name}")
 
     # playlistを保存
-    df.sort_index().loc[~df["flag"], "path"].to_csv(playlist, index=False, header=False)
+    df.sort_index().loc[~df["flag"], "path"].to_csv(playlist, index=False, header=False, sep="\t")
