@@ -56,11 +56,13 @@ if __name__ == "__main__":
 
     # グループ分け用にタイトルを変形
     df["trans_title"] = df["TITLE"]
-    df["trans_title"] = df["trans_title"].str.replace("\(.*\)", "", regex=True)
-    df["trans_title"] = df["trans_title"].str.replace("\[.*\]", "", regex=True)
-    df["trans_title"] = df["trans_title"].str.replace("{.*}", "", regex=True)
-    df["trans_title"] = df["trans_title"].str.replace("\-.*\-", "", regex=True)
-    df["trans_title"] = df["trans_title"].str.replace("\~.*\~", "", regex=True)
+
+    # 括弧の入れ子は考えないものとする
+    df["trans_title"] = df["trans_title"].str.replace("\(.*?\)", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace("\[.*?\]", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace("{.*?}", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace("\-.*?\-", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace("\~.*?\~", "", regex=True)
     df["trans_title"] = df["trans_title"].str.replace("-", "")
     df["trans_title"] = df["trans_title"].str.replace("~", "")
     df["trans_title"] = df["trans_title"].str.replace(" ", "")
@@ -70,12 +72,17 @@ if __name__ == "__main__":
     df = df.sort_values(["trans_title", "DATE"], ascending=[True, False])
     df["group_pattern"] = roll(df["trans_title"].values, 1)
     df["title_group"] = df.apply(
-        lambda x: int(not bool(re.findall("^" + x["group_pattern"], x["trans_title"]))),
+        lambda x: int(
+            not bool(re.findall("^" + re.escape(x["group_pattern"]), x["trans_title"]))
+        ),
         axis=1,
     ).cumsum()
 
     # 除外管理フラグを追加
     df["flag"] = False
+
+    # アーティスト名が「ドラマCD」の場合除外
+    df.loc[df["ARTIST"] == "ドラマCD", "flag"] = True
 
     # 優先度順に並び替える
     df = df.sort_values(["TITLE", "is_live", "DATE"], ascending=[True, True, False])
@@ -108,7 +115,7 @@ if __name__ == "__main__":
     # 除外リストを適用
     df.loc[lst, "flag"] = True
 
-    # アレンジ、live盤を除外
+    # live版を除外
     lst = []
     for (title_group, _), df_title in df[~df["flag"]].groupby(
         ["title_group", "ARTIST"]
@@ -117,7 +124,29 @@ if __name__ == "__main__":
             continue
 
         # 検出キーワード
-        regex = "live|tv|short|single|remix|mix|wo|edit|ver|style|another|version|recording|ヴァージョン|reprise|バージョン|mode"
+        regex = "live|ライブ"
+
+        # TITLEがキーワードに一致する場合を除外リストに追加
+        lst_sub = df_title.loc[
+            df_title["TITLE"].str.findall(regex).astype(bool)
+        ].index.values.tolist()
+        if len(lst_sub) == len(df_title):
+            lst_sub = lst_sub[1:]
+        lst += lst_sub
+
+    # 除外リストを適用
+    df.loc[lst, "flag"] = True
+
+    # アレンジ、ショート版を除外
+    lst = []
+    for (title_group, _), df_title in df[~df["flag"]].groupby(
+        ["title_group", "ARTIST"]
+    ):
+        if len(df_title) < 2:
+            continue
+
+        # 検出キーワード
+        regex = "tv|short|single|remix|mix|wo|edit|ver|style|another|version|recording|ヴァージョン|reprise|バージョン|mode"
 
         # TITLEがキーワードに一致する場合を除外リストに追加
         lst_sub = df_title.loc[
@@ -167,9 +196,19 @@ if __name__ == "__main__":
     df.loc[lst, "flag"] = True
 
     # tsvファイルを保存
+    priority_columns = [
+        "TITLE",
+        "ARTIST",
+        "ALBUM",
+        "flag",
+        "trans_title",
+        "title_group",
+    ]
+    columns = df.drop(columns=priority_columns).columns.values.tolist()
+    columns = priority_columns + columns
     output = Path("output")
     output.mkdir(exist_ok=True, parents=True)
-    df.sort_values(["title_group", "flag"]).to_csv(
+    df[columns].sort_values(["title_group", "flag"]).to_csv(
         output / f"{playlist.stem}.tsv", sep="\t"
     )
 
