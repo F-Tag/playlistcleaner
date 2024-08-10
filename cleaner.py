@@ -100,9 +100,7 @@ if __name__ == "__main__":
             continue
 
         # inst検出キーワード
-        regex = (
-            "instrumental|without|backing|karaoke|inst|カラオケ|off vocal|vocalless|ヴォーカルレス"
-        )
+        regex = "instrumental|without|backing|karaoke|inst|カラオケ|off vocal|vocalless|ヴォーカルレス"
 
         # TITLEがキーワードに一致する場合を除外リストに追加
         lst_sub = df_title.loc[
@@ -216,4 +214,6 @@ if __name__ == "__main__":
     move(playlist, playlist.parent / f"OLD_{playlist.name}")
 
     # playlistを保存
-    df.sort_index().loc[~df["flag"], "path"].to_csv(playlist, index=False, header=False, sep="\t")
+    df.sort_index().loc[~df["flag"], "path"].to_csv(
+        playlist, index=False, header=False, sep="\t"
+    )
