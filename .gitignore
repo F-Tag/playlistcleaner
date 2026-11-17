@@ -7,6 +7,15 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
-# Tool caches
+# Build artifacts
+build/
+dist/
+
+# Tool caches / test reports
 .ruff_cache/
 .pytest_cache/
+.coverage
+htmlcov/
+
+# Generated output
+output/

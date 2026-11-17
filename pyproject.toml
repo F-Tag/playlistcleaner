@@ -2,6 +2,7 @@
 name = "playlistcleaner"
 version = "0.1.0"
 description = "Clean up music playlists by detecting duplicate tracks."
+readme = "README.md"
 authors = [
     { name = "Fumiaki Taguchi", email = "25476669+F-Tag@users.noreply.github.com" },
 ]
@@ -13,21 +14,34 @@ dependencies = [
     "tqdm>=4.66.3,<5",
 ]
 
+[project.scripts]
+playlistcleaner = "playlistcleaner.cli:main"
+
 [dependency-groups]
 dev = [
     "bandit[toml]>=1.7",
+    "pytest>=8.0",
     "ruff>=0.5.7",
 ]
 
-[tool.uv]
-package = false
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/playlistcleaner"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
 
 [tool.ruff]
 target-version = "py311"
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "W"]
 ignore = ["E501"]
 
 [tool.bandit]
-exclude_dirs = [".venv", "output"]
+exclude_dirs = [".venv", "output", "archive"]

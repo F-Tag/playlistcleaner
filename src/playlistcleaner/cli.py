@@ -1,8 +1,9 @@
 import re
+import sys
+from collections.abc import Sequence
 from os.path import relpath
 from pathlib import Path
 from shutil import move
-from sys import argv
 from unicodedata import normalize
 
 import pandas as pd
@@ -11,7 +12,7 @@ from numpy import roll
 from tqdm import tqdm
 
 
-def get_info(path, m3u8_path):
+def get_info(path: str | Path, m3u8_path: str | Path) -> dict[str, str]:
     path, m3u8_path = Path(path), Path(m3u8_path)
     if not path.is_absolute():
         path = (m3u8_path.parent / path).resolve(strict=True)
@@ -24,7 +25,7 @@ def get_info(path, m3u8_path):
     return info_dict
 
 
-def normalizer(input_str):
+def normalizer(input_str: str) -> str:
     input_str = normalize("NFKC", input_str)
     input_str = input_str.lower()
     input_str = re.sub("[\\/\\^$*+?.|'\"・,、。’]", " ", input_str)
@@ -34,10 +35,7 @@ def normalizer(input_str):
     return input_str
 
 
-if __name__ == "__main__":
-    if len(argv) <= 1:
-        raise SystemExit(f"usage: python {Path(argv[0]).name} <playlist.m3u8>")
-    playlist = Path(argv[1])
+def clean_playlist(playlist: Path) -> None:
     files = pd.read_csv(playlist, sep="\t", header=None)
     files = files[0]
     files = files[~files.str.match("^#")]
@@ -212,3 +210,10 @@ if __name__ == "__main__":
     df.sort_index().loc[~df["flag"], "path"].to_csv(
         playlist, index=False, header=False, sep="\t"
     )
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    args = sys.argv[1:] if argv is None else argv
+    if not args:
+        raise SystemExit("usage: playlistcleaner <playlist.m3u8>")
+    clean_playlist(Path(args[0]))
