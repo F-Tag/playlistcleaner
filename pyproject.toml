@@ -22,10 +22,13 @@ dev = [
     "bandit[toml]>=1.7",
     "mypy>=2.4.1",
     "pandas-stubs>=3.1.0.261029",
+    "pip-audit>=2.10.1",
+    "pre-commit>=4.7.0",
     "pytest>=8.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.5.7",
     "types-tqdm>=4.70.0.20261106",
+    "zizmor>=1.32.0",
 ]
 
 [build-system]
@@ -67,8 +70,21 @@ target-version = "py311"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "W"]
-ignore = ["E501"]
+select = [
+    "E", "F", "I", "B", "UP", "W",
+    "C4", "C90", "SIM", "PT", "RUF", "PTH", "RET", "ARG", "T20",
+    "ISC", "FURB", "PERF", "N", "TRY", "PL",
+]
+ignore = [
+    "E501",    # 行長は formatter に任せる
+    "PLR2004", # テストや小さな分岐ではマジックナンバーを許容する
+    "RUF001",  # 日本語の全角記号を意図的に使う
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.bandit]
 exclude_dirs = [".venv", "output", "archive"]

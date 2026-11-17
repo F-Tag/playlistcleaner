@@ -66,7 +66,7 @@ def test_main_runs_the_playlist(
     playlist = tmp_path / "list.m3u8"
     seen: list[Path] = []
 
-    monkeypatch.setattr(cli, "run", lambda path: seen.append(path))
+    monkeypatch.setattr(cli, "run", seen.append)
 
     cli.main([str(playlist)])
 

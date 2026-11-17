@@ -13,35 +13,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint & format
+  checks:
+    name: Lint, format & types
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
       - name: Install dependencies
         run: uv sync --locked
-      - name: Run ruff lint
-        run: uv run ruff check .
-      - name: Check formatting
-        run: uv run ruff format --check .
-
-  types:
-    name: Type check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          enable-cache: true
-      - name: Install dependencies
-        run: uv sync --locked
-      - name: Run mypy
-        run: uv run mypy
+      - name: Run pre-commit hooks
+        run: uv run pre-commit run --all-files --show-diff-on-failure
 
   test:
     name: Test
@@ -49,6 +35,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
@@ -73,6 +61,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
@@ -80,3 +70,7 @@ jobs:
         run: uv sync --locked
       - name: Run bandit
         run: uv run bandit -c pyproject.toml -r src
+      - name: Audit dependencies
+        run: uv run pip-audit --progress-spinner off --skip-editable
+      - name: Audit GitHub Actions workflows
+        run: uv run zizmor .github/workflows
