@@ -287,7 +287,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26,<3" },
     { name = "pandas", specifier = ">=2.0.3,<3" },
     { name = "pytaglib", specifier = ">=3.2,<4" },
-    { name = "tqdm", specifier = ">=4.66.1,<5" },
+    { name = "tqdm", specifier = ">=4.66.3,<5" },
 ]
 
 [package.metadata.requires-dev]

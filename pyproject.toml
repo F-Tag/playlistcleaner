@@ -10,7 +10,7 @@ dependencies = [
     "numpy>=1.26,<3",
     "pandas>=2.0.3,<3",
     "pytaglib>=3.2,<4",
-    "tqdm>=4.66.1,<5",
+    "tqdm>=4.66.3,<5",
 ]
 
 [dependency-groups]
