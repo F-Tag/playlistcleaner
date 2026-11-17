@@ -15,6 +15,7 @@ dist/
 .ruff_cache/
 .pytest_cache/
 .coverage
+coverage.md
 htmlcov/
 
 # Generated output

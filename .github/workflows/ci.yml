@@ -40,8 +40,18 @@ jobs:
           enable-cache: true
       - name: Install dependencies
         run: uv sync --locked
-      - name: Run tests
-        run: uv run pytest
+      - name: Run tests with coverage
+        run: uv run pytest --cov --cov-report=term-missing --cov-report=markdown:coverage.md
+      - name: Add coverage report to job summary
+        if: always()
+        run: |
+          if [ -f coverage.md ]; then
+            {
+              echo "## Coverage"
+              echo
+              cat coverage.md
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   security:
     name: Security scan

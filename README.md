@@ -40,7 +40,12 @@ uv run python -m playlistcleaner path/to/playlist.m3u8
 │   └── playlistcleaner/
 │       ├── __init__.py
 │       ├── __main__.py
-│       └── cli.py
+│       ├── cli.py            # CLI エントリポイント
+│       ├── metadata.py       # 音声ファイルのタグ読み取り
+│       ├── models.py         # データモデル
+│       ├── normalization.py  # 表記ゆれの正規化
+│       ├── playlist.py       # M3U8 入出力・レポート出力
+│       └── processing.py     # 重複判定パイプライン
 ├── tests/
 ├── pyproject.toml
 ├── uv.lock
@@ -53,7 +58,10 @@ uv run python -m playlistcleaner path/to/playlist.m3u8
 uv run ruff check .
 uv run ruff format .
 uv run bandit -c pyproject.toml -r src
-uv run pytest
+uv run pytest --cov --cov-report=term-missing
 ```
+
+テストはカバレッジ付きで実行でき、90% を下回ると失敗します。
+CI の Test ジョブではカバレッジレポートを Job Summary にも表示します。
 
 `duplicates.vbs` は foobar2000 用の旧スクリプトとして `archive/` に保管しています。
