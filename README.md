@@ -57,10 +57,12 @@ uv run python -m playlistcleaner path/to/playlist.m3u8
 ```sh
 uv run ruff check .
 uv run ruff format .
+uv run mypy
 uv run bandit -c pyproject.toml -r src
 uv run pytest --cov --cov-report=term-missing
 ```
 
+型チェックは mypy の strict モードで実行します。
 テストはカバレッジ付きで実行でき、90% を下回ると失敗します。
 CI の Test ジョブではカバレッジレポートを Job Summary にも表示します。
 

@@ -20,9 +20,12 @@ playlistcleaner = "playlistcleaner.cli:main"
 [dependency-groups]
 dev = [
     "bandit[toml]>=1.7",
+    "mypy>=2.4.1",
+    "pandas-stubs>=3.1.0.261029",
     "pytest>=8.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.5.7",
+    "types-tqdm>=4.70.0.20261106",
 ]
 
 [build-system]
@@ -47,6 +50,17 @@ exclude_also = [
     "if TYPE_CHECKING:",
     "@overload",
 ]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+mypy_path = "src"
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["taglib"]
+ignore_missing_imports = true
 
 [tool.ruff]
 target-version = "py311"

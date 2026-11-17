@@ -14,8 +14,8 @@ class FakeSong:
     def __enter__(self) -> "FakeSong":
         return self
 
-    def __exit__(self, *args: object) -> bool:
-        return False
+    def __exit__(self, *args: object) -> None:
+        return None
 
 
 @pytest.mark.parametrize("absolute", [False, True])
@@ -41,7 +41,8 @@ def test_read_track_reads_first_value_and_relative_path(
     assert track.path == "song.mp3"
     assert track.tags == {"TITLE": "Song", "ARTIST": "Artist"}
     assert seen["save_on_exit"] is False
-    assert Path(seen["path"]) == audio.resolve()
+    assert isinstance(seen["path"], Path)
+    assert seen["path"] == audio.resolve()
 
 
 def test_read_tracks_reads_each_path(

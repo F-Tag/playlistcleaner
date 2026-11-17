@@ -14,6 +14,7 @@ dist/
 # Tool caches / test reports
 .ruff_cache/
 .pytest_cache/
+.mypy_cache/
 .coverage
 coverage.md
 htmlcov/
