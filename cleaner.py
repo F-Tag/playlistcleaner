@@ -27,7 +27,7 @@ def get_info(path, m3u8_path):
 def normalizer(input_str):
     input_str = normalize("NFKC", input_str)
     input_str = input_str.lower()
-    input_str = re.sub("[\/\\^$*+?.|'\"・,、。’]", " ", input_str)
+    input_str = re.sub("[\\/\\^$*+?.|'\"・,、。’]", " ", input_str)
     input_str = re.sub(" +", " ", input_str)
     input_str = re.sub(" $", "", input_str)
     input_str = re.sub("^ ", "", input_str)
@@ -35,7 +35,8 @@ def normalizer(input_str):
 
 
 if __name__ == "__main__":
-    assert len(argv) > 1
+    if len(argv) <= 1:
+        raise SystemExit(f"usage: python {Path(argv[0]).name} <playlist.m3u8>")
     playlist = Path(argv[1])
     files = pd.read_csv(playlist, sep="\t", header=None)
     files = files[0]
@@ -58,11 +59,11 @@ if __name__ == "__main__":
     df["trans_title"] = df["TITLE"]
 
     # 括弧の入れ子は考えないものとする
-    df["trans_title"] = df["trans_title"].str.replace("\(.*?\)", "", regex=True)
-    df["trans_title"] = df["trans_title"].str.replace("\[.*?\]", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace(r"\(.*?\)", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace(r"\[.*?\]", "", regex=True)
     df["trans_title"] = df["trans_title"].str.replace("{.*?}", "", regex=True)
-    df["trans_title"] = df["trans_title"].str.replace("\-.*?\-", "", regex=True)
-    df["trans_title"] = df["trans_title"].str.replace("\~.*?\~", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace(r"\-.*?\-", "", regex=True)
+    df["trans_title"] = df["trans_title"].str.replace(r"\~.*?\~", "", regex=True)
     df["trans_title"] = df["trans_title"].str.replace("-", "")
     df["trans_title"] = df["trans_title"].str.replace("~", "")
     df["trans_title"] = df["trans_title"].str.replace(" ", "")
@@ -95,7 +96,7 @@ if __name__ == "__main__":
 
     # instを除外
     lst = []
-    for title_group, df_title in df[~df["flag"]].groupby("title_group"):
+    for _key, df_title in df[~df["flag"]].groupby("title_group"):
         if len(df_title) < 2:
             continue
 
@@ -115,9 +116,7 @@ if __name__ == "__main__":
 
     # live版を除外
     lst = []
-    for (title_group, _), df_title in df[~df["flag"]].groupby(
-        ["title_group", "ARTIST"]
-    ):
+    for _key, df_title in df[~df["flag"]].groupby(["title_group", "ARTIST"]):
         if len(df_title) < 2:
             continue
 
@@ -137,9 +136,7 @@ if __name__ == "__main__":
 
     # アレンジ、ショート版を除外
     lst = []
-    for (title_group, _), df_title in df[~df["flag"]].groupby(
-        ["title_group", "ARTIST"]
-    ):
+    for _key, df_title in df[~df["flag"]].groupby(["title_group", "ARTIST"]):
         if len(df_title) < 2:
             continue
 
@@ -178,9 +175,7 @@ if __name__ == "__main__":
 
     # 同じtitle_groupの内live版のものが残っていればDROP
     lst = []
-    for (title_group, _), df_title in df[~df["flag"]].groupby(
-        ["title_group", "ARTIST"]
-    ):
+    for _key, df_title in df[~df["flag"]].groupby(["title_group", "ARTIST"]):
         if len(df_title) < 2:
             continue
 

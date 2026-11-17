@@ -1,21 +1,33 @@
-[tool.poetry]
+[project]
 name = "playlistcleaner"
 version = "0.1.0"
-description = ""
-authors = ["Fumiaki Taguchi <25476669+F-Tag@users.noreply.github.com>"]
-readme = "README.md"
+description = "Clean up music playlists by detecting duplicate tracks."
+authors = [
+    { name = "Fumiaki Taguchi", email = "25476669+F-Tag@users.noreply.github.com" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26,<3",
+    "pandas>=2.0.3,<3",
+    "pytaglib>=3.2,<4",
+    "tqdm>=4.66.1,<5",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-pandas = "^2.0.3"
-tqdm = "^4.66.1"
-pytaglib = "^2.1.0"
+[dependency-groups]
+dev = [
+    "bandit[toml]>=1.7",
+    "ruff>=0.5.7",
+]
 
+[tool.uv]
+package = false
 
-[tool.poetry.group.dev.dependencies]
-isort = "^5.12.0"
-ruff = "^0.5.7"
+[tool.ruff]
+target-version = "py311"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = ["E501"]
+
+[tool.bandit]
+exclude_dirs = [".venv", "output"]

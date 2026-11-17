@@ -1,2 +1,12 @@
 *.csv
 *.tsv
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Tool caches
+.ruff_cache/
+.pytest_cache/
