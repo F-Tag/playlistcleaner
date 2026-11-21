@@ -45,6 +45,36 @@ def test_read_track_reads_first_value_and_relative_path(
     assert seen["path"] == audio.resolve()
 
 
+def test_read_track_falls_back_to_absolute_path_on_different_drives(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    playlist = tmp_path / "playlist.m3u8"
+    playlist.write_text("", encoding="utf-8")
+    audio = tmp_path / "song.mp3"
+    audio.write_bytes(b"dummy")
+    seen_file: dict[str, object] = {}
+    seen_relpath: dict[str, object] = {}
+
+    def fake_file(path: Path, save_on_exit: bool) -> FakeSong:
+        seen_file["path"] = path
+        seen_file["save_on_exit"] = save_on_exit
+        return FakeSong({"TITLE": ["Song"]})
+
+    def fake_relpath(path: str | Path, start: str | Path = ".") -> str:
+        seen_relpath["path"] = path
+        seen_relpath["start"] = start
+        raise ValueError
+
+    monkeypatch.setattr(metadata, "taglib", SimpleNamespace(File=fake_file))
+    monkeypatch.setattr(metadata, "relpath", fake_relpath)
+
+    track = metadata.read_track(audio, playlist)
+
+    assert track.path == str(audio)
+    assert seen_file == {"path": audio, "save_on_exit": False}
+    assert seen_relpath == {"path": audio, "start": playlist.parent}
+
+
 def test_read_tracks_reads_each_path(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
