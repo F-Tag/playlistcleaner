@@ -1,14 +1,29 @@
 import re
 from unicodedata import normalize
 
-LIVE_ALBUM_PATTERN = "come along|live"
-LIVE_TITLE_PATTERN = "live|ライブ"
-INSTRUMENTAL_PATTERN = "instrumental|without|backing|karaoke|inst|カラオケ|off vocal|vocalless|ヴォーカルレス"
-ALTERNATE_VERSION_PATTERN = (
-    "tv|short|single|remix|mix|wo|edit|ver|style|another|version|recording|"
-    "ヴァージョン|reprise|バージョン|mode"
+_ASCII_WORD = "a-z0-9_"
+
+
+def _token(pattern: str) -> str:
+    """ASCII 英数字の語中一致を防ぐ前後の境界を付ける。
+
+    対象の文字列は `normalize_text()` で小文字化済みであることを前提とする。
+    この関数は ASCII のトークンにだけ使い、日本語のトークンには境界を付けない。
+    """
+    return rf"(?<![{_ASCII_WORD}])(?:{pattern})(?![{_ASCII_WORD}])"
+
+
+LIVE_ALBUM_PATTERN = _token("come along|live")
+LIVE_TITLE_PATTERN = f"{_token('live')}|ライブ"
+INSTRUMENTAL_PATTERN = (
+    f"{_token('instrumentals?|without vocals?|backing track|karaoke|inst|off vocal|vocalless')}"
+    "|カラオケ|ヴォーカルレス"
 )
-REMASTER_PATTERN = "remaster|aufwachen"
+ALTERNATE_VERSION_PATTERN = (
+    f"{_token('tv|short|singles?|remix(?:es)?|mix(?:es)?|wo|edit(?:ed)?|ver|style|another|versions?|recordings?|reprise|mode')}"
+    "|ヴァージョン|バージョン"
+)
+REMASTER_PATTERN = _token("remaster(?:ed)?|aufwachen")
 
 _PUNCTUATION = re.compile("[\\/\\^$*+?.|'\"・,、。’]")
 _SPACES = re.compile(" +")

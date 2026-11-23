@@ -78,6 +78,21 @@ def test_normalize_tracks_normalizes_tags_and_adds_comparison_columns() -> None:
     assert result["trans_title"].tolist() == ["song", ""]
 
 
+def test_normalize_tracks_ignores_live_inside_words() -> None:
+    df = pd.DataFrame(
+        {
+            "TITLE": ["Song"],
+            "ARTIST": ["Artist"],
+            "ALBUM": ["Olive"],
+            "DATE": ["2020"],
+        }
+    )
+
+    result = normalize_tracks(df)
+
+    assert result["is_live"].tolist() == [0]
+
+
 def test_add_title_groups_groups_prefixed_titles() -> None:
     df = pd.DataFrame(
         {
@@ -94,11 +109,24 @@ def test_add_title_groups_groups_prefixed_titles() -> None:
 
 
 def test_mark_initial_flags_flags_drama_cds() -> None:
-    df = pd.DataFrame({"ARTIST": ["ドラマCD", "artist"]})
+    # normalize_tracks() 適用後の値を渡す（実際のパイプラインと同じ入力）。
+    df = pd.DataFrame({"ARTIST": ["ドラマcd", "artist"]})
 
     result = mark_initial_flags(df)
 
     assert result["flag"].tolist() == [True, False]
+
+
+def test_deduplicate_flags_drama_cd_tracks() -> None:
+    tracks = [
+        _track("drama.mp3", "Drama", artist="ドラマCD"),
+        _track("song.mp3", "Song"),
+    ]
+
+    result = deduplicate(tracks)
+
+    flags = dict(zip(result["path"], result["flag"], strict=True))
+    assert flags == {"drama.mp3": True, "song.mp3": False}
 
 
 def test_mark_duplicate_titles_keeps_first_by_live_and_date_priority() -> None:
@@ -154,6 +182,21 @@ def test_mark_live_versions_keeps_one_when_every_title_matches() -> None:
     assert result["flag"].tolist() == [False, True, False, True, False]
 
 
+def test_mark_live_versions_ignores_live_inside_words() -> None:
+    df = pd.DataFrame(
+        {
+            "TITLE": ["olive", "alive", "delivery"],
+            "title_group": [1, 1, 1],
+            "ARTIST": ["artist"] * 3,
+            "flag": [False] * 3,
+        }
+    )
+
+    result = mark_live_versions(df)
+
+    assert result["flag"].tolist() == [False, False, False]
+
+
 def test_mark_alternate_versions_flags_matching_titles() -> None:
     df = pd.DataFrame(
         {
@@ -167,6 +210,26 @@ def test_mark_alternate_versions_flags_matching_titles() -> None:
     result = mark_alternate_versions(df)
 
     assert result["flag"].tolist() == [False, True, False, True, False]
+
+
+def test_mark_alternate_versions_ignores_version_substrings() -> None:
+    df = pd.DataFrame(
+        {
+            "TITLE": [
+                "every night",
+                "every night [2012 new remaster]",
+                "forever mine",
+                "never grow old",
+            ],
+            "title_group": [1, 1, 1, 1],
+            "ARTIST": ["artist"] * 4,
+            "flag": [False] * 4,
+        }
+    )
+
+    result = mark_alternate_versions(df)
+
+    assert result["flag"].tolist() == [False, False, False, False]
 
 
 def test_mark_remastered_adds_remaster_column() -> None:

@@ -18,6 +18,7 @@ from playlistcleaner.normalization import (
 REQUIRED_COLUMNS = ("TITLE", "ARTIST", "ALBUM", "DATE")
 DEDUP_SORT_COLUMNS = ["trans_title", "flag", "is_remaster", "is_live", "DATE"]
 DEDUP_SORT_ASCENDING = [True, True, False, True, False]
+DRAMA_CD_ARTIST = normalize_text("ドラマCD")
 
 
 def build_dataframe(tracks: Sequence[Track]) -> pd.DataFrame:
@@ -66,7 +67,7 @@ def mark_initial_flags(df: pd.DataFrame) -> pd.DataFrame:
     """ドラマCDを除外対象として初期フラグを設定する。"""
     df = df.copy()
     df["flag"] = False
-    df.loc[df["ARTIST"] == "ドラマCD", "flag"] = True
+    df.loc[df["ARTIST"] == DRAMA_CD_ARTIST, "flag"] = True
     return df
 
 
